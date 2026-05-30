@@ -114,7 +114,7 @@ export const Optional: ReflectableDecorator<boolean> = Reflector.createDecorator
  *
  * @see {@link UserSession} for complete type definition
  */
-export const Session: ParameterDecorator = createParamDecorator(
+export const Session: () => ParameterDecorator = createParamDecorator(
 	(_data: unknown, context: ExecutionContext): unknown => {
 		const request = context.switchToHttp().getRequest<FastifyRequest>();
 		return request.session;
