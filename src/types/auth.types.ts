@@ -112,7 +112,8 @@ export type AuthModuleFeatures = {
  * @see {@link AuthModule.forRoot} for static configuration
  * @see {@link AuthModule.forRootAsync} for async configuration
  */
-export interface AuthModuleConfig<T extends Auth = Auth> extends AuthModuleFeatures {
+// biome-ignore lint/suspicious/noExplicitAny: invariance of Auth<T> requires Auth<any> upper bound
+export interface AuthModuleConfig<T extends Auth<any> = Auth> extends AuthModuleFeatures {
 	auth: T;
 }
 

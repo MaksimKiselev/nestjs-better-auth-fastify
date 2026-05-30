@@ -1,6 +1,13 @@
 /** biome-ignore-all lint/complexity/noThisInStatic: Allow super in forRoot and forRootAsync */
-import type { DynamicModule, MiddlewareConsumer, NestModule, OnModuleInit } from '@nestjs/common';
+import type {
+	ConfigurableModuleAsyncOptions,
+	DynamicModule,
+	MiddlewareConsumer,
+	NestModule,
+	OnModuleInit,
+} from '@nestjs/common';
 import type { FastifyAdapter } from '@nestjs/platform-fastify';
+import type { Auth } from 'better-auth';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { AuthModuleConfig } from './types';
 
@@ -22,10 +29,22 @@ import { AuthGuard } from './auth.guard';
 import {
 	type ASYNC_OPTIONS_TYPE,
 	ConfigurableModuleClass,
+	type ExtraOptions,
 	type OPTIONS_TYPE,
 } from './auth.module-definition';
 import { AuthService } from './auth.service';
 import { AUTH_MODULE_OPTIONS } from './auth.symbols';
+
+// `Auth<any>` rather than `Auth` because `Auth<T>` is invariant in `T` via
+// `$context: Promise<PluginContext<T> & ...>` — constraining to the default
+// `Auth<BetterAuthOptions>` blocks inference for any narrowed instance.
+// biome-ignore lint/suspicious/noExplicitAny: see above
+export type AuthModuleForRootOptions<T extends Auth<any> = Auth> = AuthModuleConfig<T> &
+	Partial<ExtraOptions>;
+
+// biome-ignore lint/suspicious/noExplicitAny: see AuthModuleForRootOptions
+export type AuthModuleForRootAsyncOptions<T extends Auth<any> = Auth> =
+	ConfigurableModuleAsyncOptions<AuthModuleConfig<T>, 'createAuthConfig'> & Partial<ExtraOptions>;
 
 const HOOKS = [
 	{ metadataKey: BeforeHook.KEY, hookType: 'before' as const },
@@ -509,8 +528,9 @@ import { BetterAuthModule } from './modules/better-auth/better-auth.module';
 	 * export class AppModule {}
 	 * ```
 	 */
-	static forRoot(options: typeof OPTIONS_TYPE): DynamicModule {
-		const forRootResult = super.forRoot(options);
+	// biome-ignore lint/suspicious/noExplicitAny: invariance of Auth<T> requires Auth<any> upper bound
+	static forRoot<T extends Auth<any> = Auth>(options: AuthModuleForRootOptions<T>): DynamicModule {
+		const forRootResult = super.forRoot(options as unknown as typeof OPTIONS_TYPE);
 
 		return {
 			...forRootResult,
@@ -553,8 +573,11 @@ import { BetterAuthModule } from './modules/better-auth/better-auth.module';
 	 * })
 	 * ```
 	 */
-	static forRootAsync(options: typeof ASYNC_OPTIONS_TYPE): DynamicModule {
-		const forRootAsyncResult = super.forRootAsync(options);
+	static forRootAsync<
+		// biome-ignore lint/suspicious/noExplicitAny: invariance of Auth<T> requires Auth<any> upper bound
+		T extends Auth<any> = Auth,
+	>(options: AuthModuleForRootAsyncOptions<T>): DynamicModule {
+		const forRootAsyncResult = super.forRootAsync(options as unknown as typeof ASYNC_OPTIONS_TYPE);
 
 		return {
 			...forRootAsyncResult,

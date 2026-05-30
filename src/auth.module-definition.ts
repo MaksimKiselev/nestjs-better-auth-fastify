@@ -4,7 +4,7 @@ import { ConfigurableModuleBuilder } from '@nestjs/common';
 
 import { AUTH_MODULE_OPTIONS } from './auth.symbols';
 
-interface ExtraOptions extends AuthModuleFeatures {
+export interface ExtraOptions extends AuthModuleFeatures {
 	isGlobal: boolean;
 }
 
